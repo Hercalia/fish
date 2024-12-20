@@ -6,7 +6,6 @@ import os
 import time as tm
 import numpy as np
 from functools import lru_cache
-
 # Initialize Pygame
 pygame.init()
 # Screen dimensions
@@ -85,14 +84,15 @@ class Boid:
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
         # self.position += self.velocity
-        # self.frame += 1
-        # if self.frame % 2 == 0:
-        #     self.trail.append([self.position[0], self.position[1], self.sframe])  # Change to list
-        # self.frame %= 2
-        # for trail in self.trail:
-        #     trail[2] -= 1
-        #     if trail[2] < 0:
-        #         self.trail.remove(trail)
+    # def trail_update(self):
+    #     self.frame += 1
+    #     if self.frame % 2 == 0:
+    #         self.trail.append([self.position[0], self.position[1], self.sframe])  # Change to list
+    #     self.frame %= 2
+    #     for trail in self.trail:
+    #         trail[2] -= 1
+    #         if trail[2] < 0:
+    #             self.trail.remove(trail)
 
     def check_bounds(self):       
         margin = 24 # Distance from the edge to start turning
@@ -212,7 +212,7 @@ class Boid:
     def apply_alignment(self, boids, alignment_distance):
         """ALIGNMENT def"""
         velocities = [boid.velocity for boid in boids if boid != self and self.bdistance(boid) < alignment_distance #and boid.fish_type == self.fish_type 
-                    #  and abs(self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) - (np.degrees(self.bcalc_angle(boid.position)) + 180 if self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) > 180 else np.degrees(self.bcalc_angle(boid.position)))) < 45
+                    #  and (abs(self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) - (np.degrees(self.bcalc_angle(boid.position)))) < 60 if self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) < 180 else abs((self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1]))-360) - (np.degrees(self.bcalc_angle(boid.position)))) < 60)
                     ]
         if not velocities:return
         avg_velocity = [sum(v[i]for v in velocities)/len(velocities)for i in [0,1]]
@@ -222,7 +222,7 @@ class Boid:
 
     def apply_cohesion(self, boids, cohesion_distance):
         positions =  [boid.position for boid in boids if boid != self and self.bdistance(boid) < cohesion_distance #and boid.fish_type == self.fish_type
-                    #  and abs(self.poscalc_angle((0,0),(boid.velocity[0],boid.velocity[1]))-np.degrees(self.bcalc_angle(boid.position))) < 60
+                    #  and (abs(self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) - (np.degrees(self.bcalc_angle(boid.position)))) < 60 if self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1])) < 180 else abs((self.poscalc_angle((0, 0), (boid.velocity[0], boid.velocity[1]))-360) - (np.degrees(self.bcalc_angle(boid.position)))) < 60)
                     ]
         if not positions:return
         avg_position = [sum(p[i] for p in positions) / len(positions) for i in [0,1]]#np.mean(positions, axis=0)
@@ -351,7 +351,6 @@ class Slider:
 # Main loop
 def main():
     global screen
-    global zones
     global cx,cy,zoomx,zoomy
     cx = screen_width/2
     cy = screen_height/2
@@ -575,9 +574,7 @@ def main():
                     #     boid.velocity[0]*=0.99
                     #     boid.velocity[1]*=0.99
                     #     # pygame.draw.circle(screen, (255, 255, 255), (int(trail[0]), int(trail[1])), 1)
-                # else:
-
-                #     boid.trail = []
+                # boid.trail_update()
                 boid.draw(screen,scale=aascale)
         boidsim()
         # for food in listoffoods:
@@ -618,3 +615,5 @@ if __name__ == "__main__":
     main()
 #python -c "import fish; fish.main()"
 #python decoder.py build_ext --inplace
+
+

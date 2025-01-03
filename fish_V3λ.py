@@ -1,10 +1,8 @@
 #takeown /f "D:\Program Files" /r /d y, Adminstrator run
 #icacls "D:\Program Files" /grant %username%:F /t
 import pygame as pg
-import random
-import os
-import time as tm
 from math import cos,sin,acos
+from random import choice,randint
 from functools import lru_cache
 # Initialize pygame
 pg.init()
@@ -13,7 +11,7 @@ screen_width = 1200
 screen_height = 900
 screen = pg.display.set_mode((screen_width, screen_height))
 pg.display.set_caption("Haelifli (🇸🇮🇲🇺🇱🇦🇹🇮🇴🇳)")
-icon = pg.image.load(os.path.join('assets', 'logo.webp'))
+icon = pg.image.load("assets\logo.webp")
 icon = pg.transform.scale(icon, (128, 128))
 pg.display.set_icon(icon)
 atan2 = lambda y, x: acos(x / (x**2 + y**2)**0.5) if y >= 0 else -acos(x / (x**2 + y**2)**0.5)
@@ -28,11 +26,11 @@ NewRturnM_scale = lambda x, y, scale: ((x-screen_width/2)/ scale + screen_width/
 class Food:
     def __init__(self, x, y):
         self.position = [x, y]
-        self.image = pg.transform.scale(pg.image.load(os.path.join('assets', 'goldbar.png')), (16, 16)) 
+        self.image = pg.transform.scale(pg.image.load('assets\goldbar.png'), (16, 16)) 
 class Boid:
     def __init__(self, screen_width, screen_height, 
-                 separation_resolve=0.2, alignment_resolve=0.03, cohesion_resolve=0.02, top_speed=4.5, 
-                 fishima=None, x=None, y=None, fish_type='fish',width=36,height=16,
+                 separation_resolve=0.2, alignment_resolve=0.03, cohesion_resolve=0.02, top_speed=5, 
+                 fishima=None, x=screen_width/2, y=screen_height/2, fish_type='fish',width=36,height=16,
                  bx=0,by=0,bex=screen_width,bey=screen_height,fleft = False,ftop = False):
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -40,8 +38,8 @@ class Boid:
         # self.velocity = np.array([top_speed,top_speed], dtype=float)
         self.position = [x, y]
         self.velocity = [top_speed,top_speed]
-        self.velocity[0] *= round(random.choice([-1, 1]), 10)
-        self.velocity[1] *= round(random.choice([-1, 1]), 10)
+        self.velocity[0] *= round(choice([-1, 1]), 10)
+        self.velocity[1] *= round(choice([-1, 1]), 10)
         self.angle = atan2(self.velocity[1], -self.velocity[0])*3.1415926535897932/180
         self.max_speed = top_speed
         self.min_speed = 1
@@ -131,7 +129,7 @@ class Boid:
             if valid_left_count>0 and valid_right_count>0:
                 if valid_left_count < valid_right_count:chosen_direction = aright
                 elif valid_right_count < valid_left_count:chosen_direction =aleft
-                else:chosen_direction = random.choice([aleft,aright])
+                else:chosen_direction = choice([aleft,aright])
             elif valid_left_count>0:chosen_direction = aleft
             elif valid_right_count>0:chosen_direction = aright
             if chosen_direction != 0:
@@ -142,21 +140,13 @@ class Boid:
     # def move_random_direction(self):
     #     dist = np.hypot(self.velocity[0], self.velocity[1])
     #     self.angle = math.atan2(self.velocity[1], self.velocity[0])
-    #     self.angle += random.uniform(-0.5, 0.5)
+    #     self.angle +=  uniform(-0.5, 0.5)
     #     self.velocity[0] = dist * math.cos(self.angle)*2
     #     self.velocity[1] = dist * math.sin(self.angle)*2
-    
     def apply_separation(self, boids, separation_distance):
         # if not boids:return
         positions = [(boid.position[0]-self.position[0],boid.position[1]-self.position[1]) for boid in boids if boid != self and self.bdistance(boid) < separation_distance]
         if not positions:return
-        '''V1 of separation'''
-        # for pos in positions:
-        #     totx = pos[0] - self.position[0]
-        #     toty = pos[1] - self.position[1]
-        #     totdist = self.posdistance((0, 0), (totx, toty))
-        #     self.velocity[0] -= (totx / totdist) * self.separation_resolve
-        #     self.velocity[1] -= (toty / totdist) * self.separation_resolve
         '''V2 of separation'''
         # totxy = positions - np.array(self.position)
         # totdist = np.linalg.norm(positions, axis=1)
@@ -167,7 +157,6 @@ class Boid:
         distances = [self.posdistance((0,0),(pos[0], pos[1])) for pos in positions]
         self.velocity[0] -= sum((pos[0]/dist) for pos, dist in zip(positions, distances)) * self.separation_resolve
         self.velocity[1] -= sum((pos[1]/dist) for pos, dist in zip(positions, distances)) * self.separation_resolve
-
         # move_x, move_y = 0, 0
         # for other_boid in boids:
         #     if other_boid != self and self.distance(other_boid) < separation_distance:
@@ -175,7 +164,6 @@ class Boid:
         #         move_y += self.position[1] - other_boid.position[1]
         # self.velocity[0] += move_x * self.separation_resolve  # Apply a smaller fraction for smoother separation
         # self.velocity[1] += move_y * self.separation_resolve  # Apply a smaller fraction for smoother separation
-
     def apply_alignment(self, boids, alignment_distance):
         """ALIGNMENT def"""
         velocities = [b for b in boids if b != self and self.bdistance(b) < alignment_distance #and boid.fish_type == self.fish_type 
@@ -186,8 +174,6 @@ class Boid:
         avg_velocity = [sum(v.velocity[i]for v in velocities)/len(velocities)for i in [0,1]]
         self.velocity[0] += (avg_velocity[0] - self.velocity[0]) * self.alignment_resolve
         self.velocity[1] += (avg_velocity[1] - self.velocity[1]) * self.alignment_resolve
-
-
     def apply_cohesion(self, boids, cohesion_distance):
         positions =  [b for b in boids if b != self and self.bdistance(b) < cohesion_distance #and boid.fish_type == self.fish_type
                     # and (abs(self.poscalc_angle((0, 0), (b.velocity[0], b.velocity[1]))*180/3.1415926535897932 - ((self.bcalc_angle(b.position))*180/3.1415926535897932)) < 60 if self.poscalc_angle((0, 0), (b.velocity[0], b.velocity[1]))*180/3.1415926535897932 < 180 else abs((self.poscalc_angle((0, 0), (b.velocity[0], b.velocity[1]))*180/3.1415926535897932-360) - ((self.bcalc_angle(b.position))*180/3.1415926535897932)) < 60)
@@ -294,11 +280,11 @@ class Boid:
         # if not (sx < -nfwidth*2 or sx > screen_width or sy< -nfheight*2 or sy > screen_height):
         #     if scale > 0.2: screen.blit(self.newimage, (sx, sy))
         #     else:pg.draw.circle(screen, (255, 0, 0), (int(sx), int(sy)), 2)
-        # angle = self.poscalc_angle((0,0),(self.velocity[0], self.velocity[1]))#*0.01745329251994329576
-        pg.draw.circle(screen, self.color, retruescale(self.position[0], self.position[1], scale),int(4*scale))
-        pg.draw.line(screen, (255,255,0), retruescale(self.position[0], self.position[1], scale), retruescale(self.position[0] + self.velocity[0], self.position[1] + self.velocity[1], scale), int(2*scale))
-        # angle90 = angle+1.570796326794896
-        # right_a = cos(angle90);left_a = sin(angle90)
+        angle = self.poscalc_angle((0,0),(self.velocity[0], self.velocity[1]))#*0.01745329251994329576
+        # pg.draw.circle(screen, self.color, retruescale(self.position[0], self.position[1], scale),int(4*scale))
+        # pg.draw.line(screen, (255,255,0), retruescale(self.position[0], self.position[1], scale), retruescale(self.position[0] + self.velocity[0], self.position[1] + self.velocity[1], scale), int(2*scale))
+        angle90 = angle+1.570796326794896
+        right_a = cos(angle90);left_a = sin(angle90)
 
         # pg.draw.polygon(screen, color, [
         #     retruescale(self.position[0], self.position[1], scale),
@@ -306,7 +292,7 @@ class Boid:
         #     retruescale(self.position[0] + self.velocity[0]*4, self.position[1] + self.velocity[1]*4, scale),
         #     retruescale(self.position[0], self.position[1] + self.velocity[1]*4, scale)
         # ])
-        # pg.draw.polygon(screen,self.color, [retruescale(self.position[0]-right_a*5,self.position[1]-left_a*5,scale),retruescale(self.position[0]+cos(angle)*10,self.position[1]+sin(angle)*10,scale),retruescale(self.position[0]+right_a*5,self.position[1]+left_a*5,scale)])
+        pg.draw.polygon(screen,self.color, [retruescale(self.position[0]-right_a*4,self.position[1]-left_a*4,scale),retruescale(self.position[0]+cos(angle)*8,self.position[1]+sin(angle)*8,scale),retruescale(self.position[0]+right_a*5,self.position[1]+left_a*5,scale)])
         # pg.draw.polygon(screen,self.color, [(self.position[0]-right_a*5,self.position[1]-left_a*5),(self.position[0]+np.cos(angle)*10,self.position[1]+np.sin(angle)*10),(self.position[0]+right_a*5,self.position[1]+left_a*5)])
 class Slider:
     def __init__(self,pos:tuple,size:tuple,val:float,minv:float,maxv:float,tyipe=None) -> None:
@@ -325,7 +311,7 @@ class Slider:
         self.init_val = (self.sl_rightpos - self.sl_leftpos) *val/self.max
         self.crect = pg.Rect(self.sl_leftpos,self.sl_toppos,self.size[0],self.size[1])
         self.brect = pg.Rect(self.sl_leftpos+self.init_val-5,self.sl_toppos,10,self.size[1])
-        self.get_val = lambda: round(((self.brect.centerx - self.sl_leftpos)/(self.sl_rightpos-self.sl_leftpos))*(self.max-self.min)+self.min,13)
+        self.get_val = lambda: round(((self.brect.centerx-self.sl_leftpos)/(self.sl_rightpos-self.sl_leftpos))*(self.max-self.min)+self.min,13)
     def mov_slid(self,mousex):
         self.brect.centerx = mousex
     def draw(self,scr):
@@ -333,10 +319,6 @@ class Slider:
         pg.draw.rect(scr,(100,100,100),pg.Rect(self.sl_leftpos-3,self.sl_toppos,self.size[0]+6,self.size[1]),2)
         pg.draw.rect(scr,(200,200,200),(self.sl_leftpos,self.pos[1]-5,(self.brect.centerx-self.sl_leftpos),10),0)
         pg.draw.rect(scr,(255,255,25),self.brect,border_radius=3) 
-    # def get_val(self):
-    #     # val_r = self.sl_rightpos-self.sl_leftpos
-    #     # b_val = self.brect.centerx - self.sl_leftpos
-    #     return round(((self.brect.centerx - self.sl_leftpos)/(self.sl_rightpos-self.sl_leftpos))*(self.max-self.min)+self.min,13)
     def set_val(self,val):
         self.init_val = (self.sl_rightpos - self.sl_leftpos) *val/self.max
         self.crect = pg.Rect(self.sl_leftpos,self.sl_toppos,self.size[0],self.size[1])
@@ -347,9 +329,9 @@ def main() -> None:
     # global zoomx,zoomy
     clock = pg.time.Clock()
     t_dist = 1
-    separation_distance = 45*t_dist#32
-    alignment_distance = 46.5*t_dist
-    cohesion_distance = 47.5*t_dist
+    separation_distance = 55*t_dist#32
+    alignment_distance = 56*t_dist
+    cohesion_distance = 56*t_dist
     separation_resolve = 0.22#0.032
     alignment_resolve = 0.06
     cohesion_resolve = 0.025
@@ -360,9 +342,7 @@ def main() -> None:
     fishima = 'assets\cod.png'
     salmonela ='assets\salmon.png'
     tunala = 'assets\\rainbow.png'
-    # background = os.path.join('assets', 'water.png')
     font = pg.font.SysFont(None, 32)
-    # background = pg.transform.scale(pg.image.load(background), (screen_width, screen_height))
     boids = []
     movdist = 30
     # zoomx = screen_width/2
@@ -374,26 +354,25 @@ def main() -> None:
     #     return (x -screen_width/2)/ scale + screen_width/2,(y -screen_height/2)/ scale + screen_height/2
     
     for i in range(96):
-        # randomwidth = random.uniform(32,34)
+        # randomwidth =  uniform(32,34)
         # randomheight = round(randomwidth*16/36)
-        randomspx = random.randint(0, screen_width)
-        randomspy = random.randint(0, screen_height)
+        randomspx = randint(0, screen_width)
+        randomspy = randint(0, screen_height)
         boids.append(Boid(screen_width, screen_height, separation_resolve, alignment_resolve, cohesion_resolve, top_speed, fishima, randomspx, randomspy, fish_type='Gadidae',width=36,height=16,fleft=True))
-        # randomwidth = random.uniform(32,34)
+        # randomwidth = uniform(32,34)
         # randomheight = int(randomwidth*16/36)
-        # randomspx = random.randint(0, screen_width)
-        # randomspy = random.randint(0, screen_height)
+        # randomspx = randint(0, screen_width)
+        # randomspy =  randint(0, screen_height)
         # boids.append(Boid(screen_width, screen_height, separation_resolve, alignment_resolve, cohesion_resolve, top_speed, salmonela, randomspx, randomspy, fish_type='Salmonidae',width=randomwidth,height=randomheight))
-
     # for i in range(24):
-    #     randomwidth = random.uniform(32,34)
+    #     randomwidth =  uniform(32,34)
     #     randomheight = int(randomwidth*16/45)
-    #     randomspx = random.uniform(-screen_width/2, screen_width/2) + screen_width // 2
-    #     randomspy = random.uniform(-screen_height/2, screen_height/2) + screen_height // 2
+    #     randomspx =  uniform(-screen_width/2, screen_width/2) + screen_width // 2
+    #     randomspy =  uniform(-screen_height/2, screen_height/2) + screen_height // 2
     #     boids.append(Boid(screen_width, screen_height, separation_resolve, alignment_resolve, cohesion_resolve, top_speed, salmonela, randomspx, randomspy, fish_type='Salmonidae',width=randomwidth,height=randomheight))
-        # randomwidth = random.uniform(14,72)
+        # randomwidth =  uniform(14,72)
         # randomheight = int(randomwidth*16/14)
-        # boids.append(Boid(screen_width, screen_height, separation_resolve, alignment_resolve, cohesion_resolve, top_speed, tunala, random.uniform(0, screen_width), random.uniform(0, screen_height), fish_type='rainbow',width=randomwidth,height=randomheight))
+        # boids.append(Boid(screen_width, screen_height, separation_resolve, alignment_resolve, cohesion_resolve, top_speed, tunala,  uniform(0, screen_width),  uniform(0, screen_height), fish_type='rainbow',width=randomwidth,height=randomheight))
     running = True
     # water = Water(600, 450, 60)
     # water = transform.scale(water.texture, (screen_width, screen_height))
@@ -409,7 +388,7 @@ def main() -> None:
                Slider((screen_width-200,65),(400,20),cohesion_resolve,0,1,"cohes"),
                Slider((screen_width-200,90),(400,20),t_dist,0,2,"dist"),
                Slider((screen_width-200,115),(400,20),top_speed,0,20,"speed"),]
-    icon = pg.image.load(os.path.join('assets', 'logo.webp'))
+    icon = pg.image.load('assets\logo.webp')
     icon = pg.transform.scale(icon, (screen_width, screen_height))
     # esceed = False
     # lframe = 120
@@ -530,10 +509,6 @@ def main() -> None:
                     boid.apply_mouse_repulsion((msx,msy), repulsion_distance/aascale, strength)
             if keys[pg.K_x]:mouserpress(-repulsion_strength/aascale)
             else:mouserpress(repulsion_strength/aascale)
-        
-        # pg.draw.circle(screen, (255, 0, 0), (int(sx), int(sy)), 10, 5)
-        # print(sx,sy,scale)
-        # @lru_cache(maxsize=2000)
         def boidsim():
             """Main boid simulation loop"""
             # for boid in boids:

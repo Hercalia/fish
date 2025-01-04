@@ -159,9 +159,9 @@ class Boid:
         self.velocity[1] -= sum((pos[1]/dist) for pos, dist in zip(positions, distances)) * self.separation_resolve
         # move_x, move_y = 0, 0
         # for other_boid in boids:
-        #     if other_boid != self and self.distance(other_boid) < separation_distance:
-        #         move_x += self.position[0] - other_boid.position[0]
-        #         move_y += self.position[1] - other_boid.position[1]
+        #     if other_boid != self and self.bdistance(other_boid) < separation_distance:
+        #         move_x -= (other_boid.position[0]-self.position[0])/self.bdistance(other_boid)
+        #         move_y -= (other_boid.position[1]-self.position[0])/self.bdistance(other_boid)
         # self.velocity[0] += move_x * self.separation_resolve  # Apply a smaller fraction for smoother separation
         # self.velocity[1] += move_y * self.separation_resolve  # Apply a smaller fraction for smoother separation
     def apply_alignment(self, boids, alignment_distance):
@@ -452,8 +452,8 @@ def main() -> None:
             cohesion_resolve = 0.025
             t_dist = 1
             separation_distance = 55*t_dist
-            alignment_distance = 56.5*t_dist
-            cohesion_distance = 57.5*t_dist
+            alignment_distance = 56*t_dist
+            cohesion_distance = 56*t_dist
             top_speed = 5
             for slider in sliders:
                 if slider.valtype == "sep":slider.set_val(separation_resolve)
